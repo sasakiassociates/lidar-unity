@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace Strategies.Objects
 {
-	
-	public class Octree<TType>
+
+
 
 	public readonly struct Las
 	{
