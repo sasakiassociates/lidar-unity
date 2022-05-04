@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": "2.3.1",
+    "com.unity.burst": "1.6.5",
     "com.unity.collab-proxy": "1.15.17",
-    "com.unity.feature.development": "1.0.1",
     "com.unity.ide.rider": "3.0.14",
+    "com.unity.mathematics": "1.2.6",
     "com.unity.test-framework": "1.1.31",
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.timeline": "1.6.4",
@@ -37,8 +39,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.cysharp.unitask": "2.3.1"
+    "com.unity.modules.xr": "1.0.0"
   },
   "scopedRegistries": [
     {
