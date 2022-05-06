@@ -8,13 +8,14 @@ using UnityEngine;
 using laszip.net;
 using Pcx;
 using Strategies.Objects;
+using Random = System.Random;
 
 public class LasToUnity : MonoBehaviour
 {
 
 	[SerializeField] private PointCloudRenderer renderer;
 	[SerializeField] private Bounds bounds;
-	
+
 	private const string v353 = "115F75F2BEEC550E9246B2944870E38B";
 	private const string v28 = "2022-04-13-45A54-equator-point";
 	private readonly string testPath = "D:\\Projects\\ViewTo\\viewto-projects\\inglewood\\laz\\" + $"{v28}.laz";
@@ -36,21 +37,44 @@ public class LasToUnity : MonoBehaviour
 
 		Debug.Log("Prep for points");
 
+		var classColors = new HashSet<byte>();
+
 		await UniTask.RunOnThreadPool(() =>
 		{
 			foreach (var point in las.points)
 			{
-				colors.Add(point.color);
+				classColors.Add(point.classification);
 				bounds.Encapsulate(point.pos);
 			}
 
+			var co = new Dictionary<byte, Color32>();
+
+			var b = new byte[3];
+			var r = new Random();
+
+			foreach (var c in classColors)
+			{
+				r.NextBytes(b);
+				co.Add(c, new Color32(b[0], b[1], b[2], 255));
+			}
+
 			foreach (var point in las.points)
+			{
 				points.Add(point.pos - bounds.center);
+				foreach (var c in co)
+				{
+					if (c.Key == point.classification)
+					{
+						colors.Add(c.Value);
+						break;
+					}
+				}
+			}
 		});
 
 		var data = ScriptableObject.CreateInstance<PointCloudData>();
 
-		Debug.Log("Sending points to buffer");
+		Debug.Log($"Sending point({points.Count}) to buffer");
 
 		#if UNITY_EDITOR
 		data.Initialize(points, colors);
@@ -58,7 +82,6 @@ public class LasToUnity : MonoBehaviour
 
 		renderer.sourceData = data;
 	}
-	
 
 	public async UniTask<LazWrapper> ReadFile()
 	{
