@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using laszip.net;
+using Pcx;
 using Strategies.Objects;
 
 public class LasToUnity : MonoBehaviour
 {
 
-	[SerializeField] private string filePath;
-
+	[SerializeField] private PointCloudRenderer renderer;
+	[SerializeField] private Bounds bounds;
+	
 	private const string v353 = "115F75F2BEEC550E9246B2944870E38B";
 	private const string v28 = "2022-04-13-45A54-equator-point";
 	private readonly string testPath = "D:\\Projects\\ViewTo\\viewto-projects\\inglewood\\laz\\" + $"{v28}.laz";
@@ -26,19 +29,36 @@ public class LasToUnity : MonoBehaviour
 
 		Debug.Log($"Completed read in {Time.time - timer}");
 
-		var classifications = new HashSet<byte>();
+		var points = new List<Vector3>();
+		var colors = new List<Color32>();
 
-		for (int i = 0; i < las.points.Count; i++)
+		bounds = new Bounds(las.points[0].pos, Vector3.one);
+
+		Debug.Log("Prep for points");
+
+		await UniTask.RunOnThreadPool(() =>
 		{
-			var point = las.points[i];
-			if (i < 100)			
-				Debug.Log($"classification: {point.classification}\ncolor: {point.color}\nposition: {point.pos}");
-
-			classifications.Add(point.classification);
+			foreach (var point in las.points)
+			{
+				colors.Add(point.color);
+				bounds.Encapsulate(point.pos);
 			}
 
-		Debug.Log($"Total classification count {classifications.Count}");
+			foreach (var point in las.points)
+				points.Add(point.pos - bounds.center);
+		});
+
+		var data = ScriptableObject.CreateInstance<PointCloudData>();
+
+		Debug.Log("Sending points to buffer");
+
+		#if UNITY_EDITOR
+		data.Initialize(points, colors);
+		#endif
+
+		renderer.sourceData = data;
 	}
+	
 
 	public async UniTask<LazWrapper> ReadFile()
 	{
@@ -49,12 +69,12 @@ public class LasToUnity : MonoBehaviour
 		var compressed = true;
 		lazReader.laszip_open_reader(filename, ref compressed);
 		var numberOfPoints = lazReader.header.number_of_point_records;
-		
+
 		var points = new List<LazPoint>();
 
 		var coordArray = new double[3];
 
-		UniTask.SwitchToThreadPool();
+		await UniTask.SwitchToThreadPool();
 
 		await UniTask.RunOnThreadPool(() =>
 		{
@@ -71,12 +91,12 @@ public class LasToUnity : MonoBehaviour
 				points.Add(new LazPoint(
 					           classification,
 					           new Color32(c.R, c.G, c.B, c.A),
-					           new Vector3((float)coordArray[0], (float)coordArray[1], (float)coordArray[2])
+					           new Vector3((float)coordArray[0], (float)coordArray[2], (float)coordArray[1])
 				           ));
 			}
 		});
 
-		UniTask.SwitchToMainThread();
+		await UniTask.SwitchToMainThread();
 
 		lazReader.laszip_close_reader();
 
