@@ -8,11 +8,23 @@ namespace Strategies.Objects
 	public static partial class Potree
 	{
 
+		public static int ReadHierarchy(string path)
+		{
+			byte[] bytes = null;
+
+			if (File.Exists(path))
+				bytes = File.ReadAllBytes(path);
+
+			if (bytes == null)
+				return 0;
+
+			return bytes.Length;
+		}
+
 		public static PotreeMetaData ReadJsonFromDir(string dir, bool moveToOrigin)
 		{
 			return ReadJsonFromPath(FormatJsonPath(dir), moveToOrigin);
 		}
-
 		/// <summary>
 		/// 
 		/// </summary>

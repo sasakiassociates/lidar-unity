@@ -13,9 +13,9 @@ public class LasToUnity : MonoBehaviour
 
 	[SerializeField] private string filePath;
 
-	private const string v353 = "115F75F2BEEC550E9246B2944870E38B";
+	private const string v353 = "2022-04-13-45A54-equator-point";
 	private const string v28 = "2022-04-13-45A54-equator-point";
-	private readonly string testPath = "D:\\Projects\\ViewTo\\viewto-projects\\inglewood\\" + $"{v28}.laz";
+	private readonly string testPath = "D:\\Projects\\ViewTo\\viewto-projects\\inglewood\\{}" + $"{v353}.laz";
 
 	public async void Start()
 	{
